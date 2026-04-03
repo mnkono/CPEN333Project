@@ -127,6 +127,8 @@ class Game():
         SPEED = 0.15     #speed of snake updates (sec)
         while self.gameNotOver:
             #complete the method implementation below
+            
+
             pass #remove this line from your implementation
 
     def whenAnArrowKeyIsPressed(self, e) -> None:
@@ -169,11 +171,21 @@ class Game():
             coordinates to be added to the snake
             coordinates list based on the movement
             direction and the current coordinate of 
-            head of the snake.
+            head of 
+            the snake.
             It is used by the move() method.    
         """
         lastX, lastY = self.snakeCoordinates[-1]
         #complete the method implementation below
+
+        if self.direction == "Left":
+            return lastX - 10, lastY
+        elif self.direction == "Right":
+            return lastX + 10, lastY
+        elif self.direction == "Up":
+            return lastX, lastY + 10
+        else:
+            return lastX, lastY - 10
 
 
     def isGameOver(self, snakeCoordinates) -> None:
@@ -187,7 +199,13 @@ class Game():
         x, y = snakeCoordinates
         #complete the method implementation below
 
-    def createNewPrey(self) -> None:
+        # checks if the snake has bit itself
+        if snakeCoordinates in self.snakeCoordinates:
+            gameQueue.put_nowait("game_over")
+
+        # incomplete, need to add if it has passed the wall 
+
+    def createNewPrey(self) -> None: 
         """ 
             This methods picks an x and a y randomly as the coordinate 
             of the new prey and uses that to calculate the 
@@ -202,12 +220,14 @@ class Game():
         #complete the method implementation below
 
 
+
 if __name__ == "__main__":
     #some constants for our GUI
     WINDOW_WIDTH = 500           
     WINDOW_HEIGHT = 300 
     SNAKE_ICON_WIDTH = 15
-    #add the specified constant PREY_ICON_WIDTH here     
+    #add the specified constant PREY_ICON_WIDTH here 
+    PREY_ICON_WIDTH = 10    
 
     BACKGROUND_COLOUR = "green"   #you may change this colour if you wish
     ICON_COLOUR = "yellow"        #you may change this colour if you wish
