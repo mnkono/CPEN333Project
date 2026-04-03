@@ -178,16 +178,18 @@ class Game():
         lastX, lastY = self.snakeCoordinates[-1]
         #complete the method implementation below
 
+        STEP = 10
         if self.direction == "Left":
-            return lastX - 10, lastY
+            return (lastX - STEP, lastY)
         elif self.direction == "Right":
-            return lastX + 10, lastY
+            return (lastX + STEP, lastY)
         elif self.direction == "Up":
-            return lastX, lastY + 10
-        else:
-            return lastX, lastY - 10
-
-
+            return (lastX, lastY - STEP)
+        elif self.direction == "Down":  
+            return (lastX, lastY + STEP)
+        
+        return (lastX, lastY) #default case, should not be reached
+        
     def isGameOver(self, snakeCoordinates) -> None:
         """
             This method checks if the game is over by 
@@ -201,7 +203,7 @@ class Game():
 
         # checks if the snake has bit itself
         if snakeCoordinates in self.snakeCoordinates:
-            gameQueue.put_nowait("game_over")
+            gameQueue.put("game_over")
 
         # incomplete, need to add if it has passed the wall 
 
@@ -219,7 +221,18 @@ class Game():
         THRESHOLD = 15   #sets how close prey can be to borders
         #complete the method implementation below
 
+        half = PREY_ICON_WIDTH // 2
 
+        x = random.randint(THRESHOLD, WINDOW_WIDTH - THRESHOLD)
+        y = random.randint(THRESHOLD, WINDOW_HEIGHT - THRESHOLD)
+
+        preyCoords = (x - half, y - half, x + half, y + half)
+
+        # store prey for collision checking
+        self.preyCoordinates = preyCoords
+
+         # send to GUI
+        self.queue.put({"prey": preyCoords}) 
 
 if __name__ == "__main__":
     #some constants for our GUI
