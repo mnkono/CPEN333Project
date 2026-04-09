@@ -45,7 +45,7 @@ class Gui():
         for key in ("Left", "Right", "Up", "Down"):
             self.root.bind(f"<Key-{key}>", game.whenAnArrowKeyIsPressed)
 
-    def gameOver(self):
+    def gameOver(self) -> None:
         """
             This method is used at the end to display a
             game over button.
@@ -65,7 +65,7 @@ class QueueHandler():
         self.gui = gui
         self.queueHandler()
     
-    def queueHandler(self):
+    def queueHandler(self) -> None:
         '''
             This method handles the queue by constantly retrieving
             tasks from it and accordingly taking the corresponding
@@ -127,9 +127,9 @@ class Game():
         SPEED = 0.15     #speed of snake updates (sec)
         while self.gameNotOver:
             #complete the method implementation below
-            
-
-            pass #remove this line from your implementation
+            self.move()
+            gameQueue.put_nowait({"move" : self.snakeCoordinates})
+            time.sleep(SPEED)
 
     def whenAnArrowKeyIsPressed(self, e) -> None:
         """ 
@@ -164,6 +164,26 @@ class Game():
         NewSnakeCoordinates = self.calculateNewCoordinates()
         #complete the method implementation below
 
+        # Checks if the snake hits a wall or bit itself first
+        self.isGameOver(NewSnakeCoordinates)
+
+        x1, y1, x2, y2 = self.preyCoordinates
+        x = (x1 + x2)/2
+        y = (y1 + y2)/2
+
+        preyLoc = (x,y)
+
+        # Checks if the snake ate a prey and if it did, adds to the length of the snake
+        if preyLoc == NewSnakeCoordinates:
+            self.snakeCoordinates.append(NewSnakeCoordinates)
+            self.score += 1
+            gameQueue.put_nowait({"score": self.score})
+            self.createNewPrey()
+
+        else:
+            # Otherwise, maintains the length of the snake
+            self.snakeCoordinates.append(NewSnakeCoordinates)
+            del self.snakeCoordinates[0]
 
     def calculateNewCoordinates(self) -> tuple:
         """
@@ -203,9 +223,16 @@ class Game():
 
         # checks if the snake has bit itself
         if snakeCoordinates in self.snakeCoordinates:
-            gameQueue.put("game_over")
+            gameQueue.put_nowait({"game_over": True})
 
-        # incomplete, need to add if it has passed the wall 
+        # might need to add in more conditions
+        # no conditions for the Score area at this time.
+
+        if x == 0 or x == 500:
+            gameQueue.put_nowait({"game_over": True})
+        elif y == 0 or y == 300:
+            gameQueue.put_nowait({"game_over": True})
+
 
     def createNewPrey(self) -> None: 
         """ 
@@ -223,15 +250,19 @@ class Game():
 
         half = PREY_ICON_WIDTH // 2
 
-        x = random.randint(THRESHOLD, WINDOW_WIDTH - THRESHOLD)
-        y = random.randint(THRESHOLD, WINDOW_HEIGHT - THRESHOLD)
+        # This ensures that the prey will always land in a location
+        # where it can be eaten by the snake given the step size of the snake
+        prey_step = 10
+
+        x = random.randrange(THRESHOLD, WINDOW_WIDTH - THRESHOLD + 1, prey_step)
+        y = random.randrange(THRESHOLD, WINDOW_HEIGHT - THRESHOLD + 1, prey_step)
 
         preyCoords = (x - half, y - half, x + half, y + half)
 
         # store prey for collision checking
         self.preyCoordinates = preyCoords
 
-         # send to GUI
+        # send to GUI
         self.queue.put({"prey": preyCoords}) 
 
 if __name__ == "__main__":
