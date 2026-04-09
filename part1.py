@@ -224,14 +224,15 @@ class Game():
         # checks if the snake has bit itself
         if snakeCoordinates in self.snakeCoordinates:
             gameQueue.put_nowait({"game_over": True})
+            self.gameNotOver = False
 
-        # might need to add in more conditions
-        # no conditions for the Score area at this time.
+        if x < 0 or x > 500:
+            gameQueue.put_nowait({"game_over": True})
+            self.gameNotOver = False
 
-        if x == 0 or x == 500:
+        elif y == 0 or y == 300 or y < 0 or y > 300:
             gameQueue.put_nowait({"game_over": True})
-        elif y == 0 or y == 300:
-            gameQueue.put_nowait({"game_over": True})
+            self.gameNotOver = False
 
 
     def createNewPrey(self) -> None: 
@@ -273,8 +274,8 @@ if __name__ == "__main__":
     #add the specified constant PREY_ICON_WIDTH here 
     PREY_ICON_WIDTH = 10    
 
-    BACKGROUND_COLOUR = "green"   #you may change this colour if you wish
-    ICON_COLOUR = "yellow"        #you may change this colour if you wish
+    BACKGROUND_COLOUR = "grey"   #you may change this colour if you wish
+    ICON_COLOUR = "pink"        #you may change this colour if you wish
 
     gameQueue = queue.Queue()     #instantiate a queue object using python's queue class
 
