@@ -261,12 +261,19 @@ class Game():
         # where it can be eaten by the snake given the step size of the snake
         prey_step = 10
 
-        # Creating a randomized location for the prey within the threshold
-        x = random.randrange(THRESHOLD, WINDOW_WIDTH - THRESHOLD + 1, prey_step)
-        y = random.randrange(THRESHOLD, WINDOW_HEIGHT - THRESHOLD + 1, prey_step)
+        while True:
+            # Creating a randomized location for the prey within the threshold
+            x = random.randrange(THRESHOLD, WINDOW_WIDTH - THRESHOLD + 1, prey_step)
+            y = random.randrange(THRESHOLD, WINDOW_HEIGHT - THRESHOLD + 1, prey_step)
 
-        # Creating the square for the prey
-        preyCoords = (x - half, y - half, x + half, y + half)
+            # Creating the square for the prey
+            preyCoords = (x - half, y - half, x + half, y + half)
+
+            prey_center = (x,y)
+
+            # Checks and verifies that the prey is not where the snake is
+            if prey_center not in self.snakeCoordinates:
+                break
 
         # store prey for collision checking
         self.preyCoordinates = preyCoords
