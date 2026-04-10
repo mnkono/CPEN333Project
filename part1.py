@@ -1,5 +1,5 @@
-# Group#: B42
-# Student Names: Mfon Nkono and Saranga Varma
+# Group#: N/A
+# Student Names: Mfon Nkono
 
 """
     This program implements a variety of the snake 
