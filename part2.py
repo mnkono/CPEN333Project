@@ -1,94 +1,80 @@
 # Group #: B42
-# Student names: Mfon Nkono and Saranga Varma
- 
+# Student names: Saranga Varma, Mfon Mkono
+
 import threading
 import queue
-import time, random
+import time
+import random
 
-# Easy-to-change constants
-NUM_PRODUCERS = 4
-NUM_CONSUMERS = 5
-ITEMS_PER_PRODUCER = 5
+# config
+NUM_P = 4
+NUM_C = 5
+ITEMS_PER_P = 5
 
-PRODUCER_DELAY_MIN = 0.1
-PRODUCER_DELAY_MAX = 0.4
-CONSUMER_DELAY_MIN = 0.1
-CONSUMER_DELAY_MAX = 0.5
+# timing
+PROD_RATE = (0.1, 0.4)
+CON_RATE = (0.1, 0.5)
 
-STOP_ITEM = None   # special value used to stop consumers
+# sentinel value
+STOP = None
 
-
-def consumerWorker(buffer: queue.Queue) -> None:
-    """Target worker for a consumer thread."""
+def consumerWorker (queue):
+    """target worker for a consumer thread"""
     while True:
-        # Get the next item from the shared queue
-        item = buffer.get()
-
-        # If the item is the stop signal, this consumer should end
-        if item == STOP_ITEM:
-            print(f"{threading.current_thread().name} received stop signal and is ending.")
-            buffer.task_done()
+        job = queue.get()
+        
+        if job is STOP:
+            print(f"{threading.current_thread().name} shutting down")
+            queue.task_done()
             break
 
-        # Simulate consuming the item
-        print(f"{threading.current_thread().name} consumed {item}")
-        time.sleep(random.uniform(CONSUMER_DELAY_MIN, CONSUMER_DELAY_MAX))
+        # simulate work
+        print(f"{threading.current_thread().name} handled {job}")
+        time.sleep(random.uniform(*CON_RATE))
+        queue.task_done()
 
-        # Tell the queue this item has been fully processed
-        buffer.task_done()
+def producerWorker(queue):
+    """target worker for a producer thread"""
+    for i in range(1, ITEMS_PER_P + 1):
+        thing = f"{threading.current_thread().name}-Item{i}"
+        queue.put(thing)
+        print(f"{threading.current_thread().name} created {thing}")
+        time.sleep(random.uniform(*PROD_RATE))
 
-
-def producerWorker(buffer: queue.Queue) -> None:
-    """Target worker for a producer thread."""
-    for itemNumber in range(1, ITEMS_PER_PRODUCER + 1):
-        # Create an item label so the output is easy to follow
-        item = f"{threading.current_thread().name}-Item{itemNumber}"
-
-        # Put the new item into the queue
-        buffer.put(item)
-        print(f"{threading.current_thread().name} produced {item}")
-
-        # Sleep for a random short time to simulate irregular production
-        time.sleep(random.uniform(PRODUCER_DELAY_MIN, PRODUCER_DELAY_MAX))
 
 
 if __name__ == "__main__":
-    # Shared FIFO buffer
+    
+    # shared buffer
     buffer = queue.Queue()
+    producers = []
+    consumers = []
 
-    producerThreads = []
-    consumerThreads = []
+    # consumers first so they are ready
+    for i in range(NUM_C):
+        t = threading.Thread(target=consumerWorker,
+                             args=(buffer,),
+                             daemon=True,
+                             name=f"Con-{i+1}")
+        consumers.append(t)
+        t.start()
 
-    # Start consumer threads first so they are ready to take items
-    for i in range(NUM_CONSUMERS):
-        consumer = threading.Thread(
-            target=consumerWorker,
-            args=(buffer,),
-            daemon=True,
-            name=f"Consumer-{i + 1}"
-        )
-        consumerThreads.append(consumer)
-        consumer.start()
+    # producers
+    for i in range(NUM_P):
+        t = threading.Thread(target=producerWorker,
+                             args=(buffer,),
+                             name=f"Prod-{i+1}")
+        producers.append(t)
+        t.start()
 
-    # Start producer threads
-    for i in range(NUM_PRODUCERS):
-        producer = threading.Thread(
-            target=producerWorker,
-            args=(buffer,),
-            name=f"Producer-{i + 1}"
-        )
-        producerThreads.append(producer)
-        producer.start()
+    # wait for production
+    for p in producers:
+        p.join()
 
-    # Wait for all producers to finish producing items
-    for producer in producerThreads:
-        producer.join()
+    # send stop signals
+    for _ in range(NUM_C):
+        buffer.put(STOP)
 
-    # After all producers are done, add one stop signal per consumer
-    for _ in range(NUM_CONSUMERS):
-        buffer.put(STOP_ITEM)
-
-    # Wait until all items in the queue have been processed
+    # wait for queue to clear
     buffer.join()
-
-    print("All produced items have been consumed. Program ending.")
+    print("All items consumed.")
